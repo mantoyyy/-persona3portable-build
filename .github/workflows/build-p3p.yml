@@ -29,10 +29,14 @@ jobs:
       - name: Install Android build components
         run: |
           sdkmanager --install \
-            "platforms;android-37" \
+            "platforms;android-37.0" \
             "build-tools;37.0.0" \
             "ndk;29.0.14206865" \
             "cmake;3.30.5"
+
+          cd "$ANDROID_HOME/platforms"
+          ln -s android-37.0 android-37
+
 
       - name: Download source archive
         env:
