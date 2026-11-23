@@ -78,16 +78,24 @@ jobs:
           PROJECT_DIR="source/EmuCoreA-master"
           test -f "$PROJECT_DIR/gradlew"
           test -f "$PROJECT_DIR/app/build.gradle.kts"
-          test -f "$PROJECT_DIR/core/CMakeLists.txt"
-          test -f "$PROJECT_DIR/core-native/build.gradle.kts"
 
           cd "$PROJECT_DIR"
 
-          # Disable Firebase because no matching Firebase client is included.
+          # Disable Google Services plugin because no Firebase config is supplied.
+          sed -i '/alias(libs.plugins.google.services)/d' app/build.gradle.kts
           rm -f app/google-services.json
 
-          # Create the expected optional native UI resource directory.
+          # Provide the missing resource referenced by Kotlin source.
+          mkdir -p app/src/main/res/values
+          cat > app/src/main/res/values/google_client_ids.xml <<'EOF'
+          <resources>
+              <string name="default_web_client_id" translatable="false"></string>
+          </resources>
+          EOF
+
+          # Required optional native UI resources directory.
           mkdir -p native-ui/resources
+
 
       - name: Build debug APK
         working-directory: source/EmuCoreA-master
