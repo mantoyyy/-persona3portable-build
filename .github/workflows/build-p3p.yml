@@ -23,8 +23,8 @@ jobs:
 
       - name: Accept Android SDK licenses
         run: |
-          set -o pipefail
           yes | sdkmanager --licenses
+
 
       - name: Install Android build components
         run: |
