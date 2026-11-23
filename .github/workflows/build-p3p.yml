@@ -21,17 +21,14 @@ jobs:
       - name: Prepare Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: platform-tools
-    
-      - name: Install Android build components
-        run: |
-          sdkmanager --install \
-            "platforms;android-37" \
-            "build-tools;37.0.0" \
-            "ndk;29.0.14206865" \
-            "cmake;3.30.5"
+          packages: |
+            platform-tools
+            platforms;android-35
+            build-tools;35.0.0
+            ndk;29.0.14206865
+            cmake;3.30.5
 
-      - name: Download source archive from this repository's Release
+      - name: Download source archive
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -45,8 +42,16 @@ jobs:
           unzip -q Persona3Portable-source-modified.zip -d source
           test -d source/EmuCoreA-master
           cd source/EmuCoreA-master
-          git clone --depth 1 https://github.com/hrydgard/ppsspp-frametest-ci.git core/frametests || true
-          git clone --depth 1 https://github.com/hrydgard/pspautotests.git core/pspautotests || true
+          git clone --depth 1 https://github.com/hrydgard/ppsspp-frametest-ci.git core/frametests
+          git clone --depth 1 https://github.com/hrydgard/pspautotests.git core/pspautotests
+
+      - name: Set Android compile SDK
+        working-directory: source/EmuCoreA-master
+        run: |
+          grep -RIlE 'compileSdk(Version)?[[:space:]]*[=(][[:space:]]*37' . \
+            --include='*.gradle' --include='*.gradle.kts' \
+            | xargs -r sed -i -E \
+            's/(compileSdk(Version)?[[:space:]]*[=(][[:space:]]*)37/\135/g'
 
       - name: Build debug APK
         working-directory: source/EmuCoreA-master
