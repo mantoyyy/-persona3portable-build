@@ -47,13 +47,11 @@ jobs:
             --pattern "Persona3Portable-source-modified.zip" \
             --dir .
 
+      
       - name: Extract project
         run: |
           unzip -q Persona3Portable-source-modified.zip -d source
           test -d source/EmuCoreA-master
-          cd source/EmuCoreA-master
-          git clone --depth 1 https://github.com/hrydgard/ppsspp-frametests.git core/frametests
-          git clone --depth 1 https://github.com/hrydgard/pspautotests.git core/pspautotests
 
       - name: Build debug APK
         working-directory: source/EmuCoreA-master
