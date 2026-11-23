@@ -2,3 +2,61 @@ name: Build Persona 3 Portable APK
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Prepare Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Prepare Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build components
+        run: |
+          sdkmanager --install \
+            "platforms;android-37" \
+            "build-tools;37.0.0" \
+            "ndk;29.0.14206865" \
+            "cmake;3.30.5"
+
+      - name: Download source archive from this repository's Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download p3p-source-v1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "Persona3Portable-source-modified.zip" \
+            --dir .
+
+      - name: Extract project
+        run: |
+          unzip -q Persona3Portable-source-modified.zip -d source
+          test -d source/EmuCoreA-master
+          cd source/EmuCoreA-master
+          git clone --depth 1 https://github.com/hrydgard/ppsspp-frametest-ci.git core/frametests || true
+          git clone --depth 1 https://github.com/hrydgard/pspautotests.git core/pspautotests || true
+
+      - name: Build debug APK
+        working-directory: source/EmuCoreA-master
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Persona3Portable-debug-apk
+          path: source/EmuCoreA-master/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
+          
