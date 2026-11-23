@@ -20,9 +20,14 @@ jobs:
 
       - name: Prepare Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: false
 
       - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses >/dev/null 2>&1 || true
+        shell: bash
+        run: |
+          set -o pipefail
+          yes | sdkmanager --licenses
 
       - name: Install Android build components
         run: |
@@ -42,18 +47,18 @@ jobs:
             --dir .
 
       - name: Extract and prepare project
+        shell: bash
         run: |
+          set -euo pipefail
           unzip -q Persona3Portable-source-modified.zip -d source
           test -d source/EmuCoreA-master
           cd source/EmuCoreA-master
 
-          # This build has no Firebase project credentials.
-          # Disable the Google Services Gradle plugin; deleting the JSON alone
-          # does NOT disable the plugin task.
+          # Disable Google Services because no matching Firebase config is provided.
           sed -i '/alias(libs.plugins.google.services)/d' app/build.gradle.kts
           rm -f app/google-services.json
 
-          # These PPSSPP test repositories are optional for the Android app build.
+          # Optional PPSSPP test repositories.
           git clone --depth 1 https://github.com/hrydgard/ppsspp-frametest-ci.git core/frametests || true
           git clone --depth 1 https://github.com/hrydgard/pspautotests.git core/pspautotests || true
 
